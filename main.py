@@ -10,6 +10,10 @@ load_dotenv(dotenv_path=env_path)
 url = os.getenv("WEB_URL")
 token = os.getenv("ADMIN_TOKEN")
 
+headers = {
+    "X-ADMIN-TOKEN": token
+}
+
 def menu():
     key = True
     response = None
@@ -25,7 +29,54 @@ def menu():
         response = input("\n#:")
         
         if response == "1":
-            pass
+            confirm_send = False
+            while not confirm_send:
+                fields = ["bio", "email", "github", "linkedin", "year", "lenguajes", "frameworks", "skills", "other"]
+                confirmField = False
+                json = None
+                while not confirmField:
+                    os.system("cls")
+                    print("Seleccione un campo a editar y confirme la edicion")
+                    for i, field in enumerate(fields):
+                        print(f"{i+1}){field}")
+                    f = int(input("#:")) - 1
+                    if f < 0 or f > len(fields):
+                        print("Respuesta incorrecta")
+                        continue
+                    
+                    if f <= 6:
+                        print(f"Añada todos los {fields[f]} separando con enter, para terminar escriba: listo")
+                        new_field = []
+                        while True:
+                            r = input("#:")
+                            if r == "listo":
+                                if len(new_field) == 0:
+                                    input("No se actualiza la data:")
+                                    break
+                                
+                                confirm_Field = True
+
+                            new_field.append(r)
+                        json = {fields[f]:new_field}
+
+                    else:
+                        print(f"Editando {fields[f]}, presione enter al terminar")
+                        new_field = input("#:")
+                        ok = input("¿confirmar? si/no:")
+                        if ok == "si":
+                            confirmField = True
+                            json = {fields[f]:new_field}
+                        elif ok == "no":
+                            pass
+                        else:
+                            print("Respuesta invalida")
+
+                response = requests.patch(f"{url}/bio", headers=headers, json=json)
+                if response.status_code == 200:
+                    input(f"datos enviados: {response.json().get("message")}")
+                else:
+                    input(f"error al enviar: {response.status_code}:{response.text}")
+                    
         elif response == "2":
             confirm_send = False
             while not confirm_send:
@@ -53,9 +104,7 @@ def menu():
                     "resumen":responses[2],
                     "contenido":responses[3]
                 }
-                headers = {
-                    "X-ADMIN-TOKEN": token
-                }
+
                 os.system("cls")            
                 for i, r in enumerate(responses):
                     print(f"{fields[i]}: {r}")
@@ -81,9 +130,7 @@ def menu():
             pass
         elif response == "4":
             print("Eliminar post")
-            headers = {
-                "X-ADMIN-TOKEN": token
-            }
+
             response = None
             while True:
                 delete_type = input("\n Dijite si quiere rliminar por id/slug:")
@@ -102,9 +149,6 @@ def menu():
                 print("Se elimino correctamente")
         
         elif response == "5":
-            headers = {
-                "X-ADMIN-TOKEN": token
-            }
             response = requests.get(f"{url}/bio/messages", headers=headers).json()
 
             for msg in response:
